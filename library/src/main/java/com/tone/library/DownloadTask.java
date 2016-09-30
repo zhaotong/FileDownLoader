@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -142,9 +143,17 @@ public class DownloadTask {
                 byte[] buffer = new byte[20480];
                 inputStream = httpURLConnection.getInputStream();
                 int length = 0;
+                int progress = (int) (currentSize*100/totalSize);
                 while ((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
                     randomAccessFile.write(buffer, 0, length);
                     currentSize += length;
+                    int progress1 = (int) (currentSize*100/totalSize);
+                    if (progress1-progress>=1){
+                        progress = progress1;
+                        if (listener != null) {
+                            listener.onProgress(downloadInfo);
+                        }
+                    }
                     downloadInfo.setCurrentSize(currentSize);
                     DownloadDB.getInstance(context).updateOrInsert(downloadInfo);
                     if (isStop) {
@@ -156,9 +165,7 @@ public class DownloadTask {
                         }
                         break;
                     }
-                    if (listener != null) {
-                        listener.onProgress(downloadInfo);
-                    }
+
                 }
                 if (listener != null) {
                     if (downloadInfo.getTotalSize() == downloadInfo.getCurrentSize())
@@ -166,7 +173,7 @@ public class DownloadTask {
                 }
                 return 0;
 
-            } catch (IOException e) {
+            }catch (Exception e) {
                 e.printStackTrace();
                 if (listener != null) {
                     listener.onError(downloadInfo);

@@ -51,7 +51,7 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder h, int position) {
         final DownloadInfo info = downloadInfos.get(position);
-        Holder holder = (Holder) h;
+        final Holder holder = (Holder) h;
         holder.file_name.setText(info.getFileName());
         int progress = (int) (info.getCurrentSize()*100/info.getTotalSize());
         Log.d("Adapter", "onBindViewHolder:  progress =="+progress);
@@ -62,17 +62,13 @@ public class Adapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
             public void onClick(View v) {
                 if (DownloadTask.getInstance(context).isDownloading(info.getFileUrl())){
                     DownloadTask.getInstance(context).stopDownload(info);
+                    holder.btn.setText("开始");
                 }else {
                     DownloadTask.getInstance(context).startDownload(info);
+                    holder.btn.setText("暂停");
                 }
             }
         });
-
-        if (DownloadTask.getInstance(context).isDownloading(info.getFileUrl())){
-            holder.btn.setText("暂停");
-        }else {
-            holder.btn.setText("开始");
-        }
         if (info.getCurrentSize()==info.getTotalSize()){
             holder.btn.setText("下载完毕");
         }
